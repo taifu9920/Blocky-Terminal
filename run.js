@@ -6,7 +6,8 @@ const express = require("express")
     , expressWinston = require('express-winston')
     , csurf = require('csurf')
     , cookieParser = require('cookie-parser')
-    , compression = require('compression');
+    , compression = require('compression')
+    , session = require('express-session');
 
 let logger = winston.createLogger({
     level: process.env.LOG_LEVEL || 'info'
@@ -29,6 +30,12 @@ let app = express();
 app.use(compression())
 app.set('view engine', 'ejs');
 
+app.use(session({
+    secret: process.env["session_secret"],
+    saveUninitialized: false,
+    resave: true, 
+}));
+
 app.use(expressWinston.logger({
     transports: [new winston.transports.Console()]
     , format: combine(
@@ -43,21 +50,43 @@ app.use(expressWinston.logger({
     , ignoreRoute: function(req, res) { return false; }
 }));
 
-
 app.use("/", express.static("static"));
 
 app.use(cookieParser());
 
-app.get("/", csurf({ cookie: true }), function(req, res) {
-    res.render("index", { csrfToken: req.csrfToken() });
+// Before Login
+
+app.get("/signin", csurf({ cookie: true }), function(req, res) {
+    let cookie = req.cookies["msg"];
+    res.clearCookie("msg", { httpOnly: true });
+    res.render("index", { csrfToken: req.csrfToken(), "msg": cookie });
 });
 
-app.post("/login", express.urlencoded({extended: false}), csurf({ cookie: true }), function(req, res) {
+app.post("/login", express.urlencoded({ extended: false }), csurf({ cookie: true }), function(req, res) {
     if (req.body["account"] == process.env["account"] && req.body["password"] == process.env["password"]) {
-        res.render("home", { msg: "Login success!" });
-    }else{
+        req.session.username = process.env["account"];
         res.redirect("/");
     }
+    else {
+        res.cookie("msg", "Wrong information", { httpOnly: true });
+        res.redirect("/signin");
+    }
+});
+
+app.get("/logout", function(req, res) {
+    req.session.destroy();
+    res.cookie("msg", "You have been logout.", { httpOnly: true });
+    res.redirect('/signin');
+});
+
+// After login
+function auth(req, res, next){
+    if (req.session.username == process.env["account"]) next()
+    else return res.redirect('/signin')
+}
+
+app.get("/", auth, function(req, res) {
+    res.render("home", { msg: "Hello user: " + req.session.username });
 });
 
 app.use((req, res) => {
