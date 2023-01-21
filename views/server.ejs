@@ -1,0 +1,34 @@
+<% layout('layout') %>
+<div class="card text-bg-secondary m-2 overflow-hidden">
+  <div class="card-header row">
+    <h5 class="col d-flex mb-0 justify-content-center align-items-center"><%= server %></h5>
+    <div class="btn-toolbar col-auto" role="toolbar" aria-label="Toolbar with button groups">
+      <div class="btn-group me-2" role="group">
+        <button type="button" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Auto Reboot"><span class="material-symbols-outlined">event_repeat</span></button>
+        <button type="button" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="No Auto Reboot"><span class="material-symbols-outlined">event_repeat</span></button>
+      </div>
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-warning text-white" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Scram"><span class="material-symbols-outlined">emergency_home</span></button>
+        <button type="button" class="btn btn-reboot text-white" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Reboot"><span class="material-symbols-outlined">restart_alt</span></button>
+        <button type="button" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Shutdown"><span class="material-symbols-outlined">power_settings_new</span></button>
+        <button type="button" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Power on"><span class="material-symbols-outlined">power_settings_new</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body d-flex flex-column-reverse" style="height:300px;">
+    <span>msg</span>
+    <span>msg2</span>
+  </div>
+  <div class="card-footer p-0">
+    <div class="input-group flex-nowrap" style="margin:-1px; width:unset;">
+      <span class="input-group-text" id="addon-wrapping" style="border-top-left-radius:0;">#</span>
+      <input type="text" style="box-shadow:none; border:0;" class="form-control bg-white" placeholder="Command Line" aria-label="Command Line" aria-describedby="addon-wrapping">
+      <button class="btn btn-reboot text-white" style="border-top-right-radius:0; color:#666;" type="button"><span class="material-symbols-outlined">send</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+</script>

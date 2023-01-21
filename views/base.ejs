@@ -1,0 +1,46 @@
+<html>
+<head>
+  <title>Service Terminal</title>
+  <meta charset="utf-8" />
+  <link href="/css/style.css" rel="stylesheet" type="text/css" />
+  <script src="/js/jquery.min.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <!-- jQuery Modal -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/jquery.cookie.js"></script>
+</head>
+
+<body>
+  <div id="alert" class="alert" style="display:none">
+    <div>
+      <h2>Alert</h2>
+      <span><%= msg == undefined ? "" : msg %></span>
+      <div><button onclick='$("#alert").fadeOut("slow")''>Confirm</button></div>
+      </div>
+    </div>
+
+    <div class="loading">
+      <div>
+        <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+          <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+        </svg>
+        <h2>Loading</h2>
+      </div>
+    </div>
+    
+    <%- body %>
+
+    <script>
+      $(window).on(' load', function() {
+        $('.loading').fadeOut("slow");
+      });
+      if ("<%= msg == undefined ? '' : msg %>" != "") {
+        $("#alert").fadeIn("slow");
+      }
+    </script>
+  </body>
+
+</html>

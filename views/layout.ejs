@@ -1,0 +1,68 @@
+<% layout('base') %>
+
+<div class="container-fluid" style="height:100%;max-height:100%;">
+  <div class="row" style="height:inherit;max-height:inherit;">
+    <div class="col-auto" style="max-height:inherit;" id="menu">
+      <ul class="nav flex-column flex-nowrap" style="max-height:inherit;">
+        <li class="nav-item">
+          <a class="nav-link d-flex justify-content-center" href="/">
+            <span class="material-symbols-outlined">home</span>
+            <span class="nav-link active collapse collapse-horizontal menus p-0" style="line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">　</span>
+            <span class="nav-link active collapse collapse-horizontal menus p-0" style="white-space:nowrap;line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">Service Terminal</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <nav class="navbar" style="padding:0;">
+            <button class="navbar-toggler pr-1 pl-1 pt-3 pb-3 container-fluid justify-content-center text-white" id="menutoggle" onclick="$.cookie('expanded', $.cookie('expanded')  == 'false', { path: '/' });" style="box-shadow:none; border:0;" type="button" data-bs-toggle="collapse" data-bs-target=".menus" aria-expanded="false">
+              <span class="material-symbols-outlined collapse collapse-horizontal menus">Menu</span>
+              <span class="material-symbols-outlined collapse collapse-horizontal menus show">Menu_Open</span>
+            </button>
+          </nav>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active d-flex justify-content-center" href="/">
+            <span class="material-symbols-outlined">speed</span>
+            <span class="nav-link active collapse collapse-horizontal menus p-0" style="line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">　</span>
+            <span class="nav-link active collapse collapse-horizontal menus p-0" style="white-space:nowrap;line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">Dashboard</span>
+          </a>
+        </li>
+        <div style="overflow:scroll;">
+          <% for(i = 0; i < server_list.length; i++) { %>
+          <li class="nav-item">
+            <a class="nav-link active d-flex justify-content-center" href="/server/<%= server_list[i] %>">
+              <span class="material-symbols-outlined">terminal</span>
+              <span class="nav-link active collapse collapse-horizontal menus p-0" style="line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">　</span>
+              <span class="nav-link active collapse collapse-horizontal menus p-0" style="white-space:nowrap;line-height:24px; color: inherit; transition:width 0.5s ease-in-out;"><%= server_list[i] %></span>
+            </a>
+          </li>
+          <% } %>
+        </div>
+      </ul>
+    </div>
+    <div class="col p-0">
+      <div class="container-fluid">
+        <div class="row bg-white">
+          <div class="col pt-2 pb-2 text-center text-bg-secondary">Welcome to Service Terminal, <%= username %></div>
+          <a class="btn btn-dark col-auto ms-auto pt-2 pb-2 d-flex" style="border-radius:0;" href="/logout">
+            <span class="material-symbols-outlined" style="margin-right:5px;">logout</span>Logout
+          </a>
+        </div>
+
+        <div class="row">
+          <div class="col p-0">
+            <%- body %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  if ($.cookie('expanded') == 'false') {
+    $.cookie('expanded', $.cookie('expanded') == 'false', {
+      path: '/'
+    })
+    $("#menutoggle").click()
+  }
+</script>
