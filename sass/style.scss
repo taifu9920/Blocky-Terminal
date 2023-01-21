@@ -2,6 +2,83 @@ $background-color: #666;
 $LoginTitleColor: rgba(#000, 50%);
 $LoginBackgroundColor: rgba(#333, 50%);
 
+@import "../node_modules/bootstrap/scss/functions";
+
+$primary: #fff;
+$secondary: rgb(179, 179, 179);
+$warning: rgb(238, 163, 0);
+$menu-bg-color: rgb(83, 149, 249);
+$body-bg: $secondary; // body background color
+$body-color: #333; // body text color
+$nav-tabs-link-active-color: rgb(171, 255, 214);
+$nav-link-color: #fff;
+$link-hover-color: $nav-tabs-link-active-color;
+$nav-pills-link-active-bg: rgba(0, 0, 0, 0);
+$nav-pills-link-active-color: rgb(96, 247, 121);
+$accordion-button-bg: rgb(86, 86, 86);
+$accordion-button-active-bg: rgb(59, 59, 59);
+$accordion-button-active-color: #fff;
+// Include any default variable overrides here
+
+@import "../node_modules/bootstrap/scss/variables";
+
+// Include any default map overrides here
+
+@import "../node_modules/bootstrap/scss/mixins";
+@import "../node_modules/bootstrap/scss/maps";
+@import "../node_modules/bootstrap/scss/root";
+@import "../node_modules/bootstrap/scss/accordion";
+@import "../node_modules/bootstrap/scss/alert";
+@import "../node_modules/bootstrap/scss/badge";
+@import "../node_modules/bootstrap/scss/breadcrumb";
+@import "../node_modules/bootstrap/scss/button-group";
+@import "../node_modules/bootstrap/scss/buttons";
+@import "../node_modules/bootstrap/scss/card";
+@import "../node_modules/bootstrap/scss/carousel";
+@import "../node_modules/bootstrap/scss/close";
+@import "../node_modules/bootstrap/scss/containers";
+@import "../node_modules/bootstrap/scss/dropdown";
+@import "../node_modules/bootstrap/scss/forms";
+@import "../node_modules/bootstrap/scss/grid";
+@import "../node_modules/bootstrap/scss/helpers";
+@import "../node_modules/bootstrap/scss/images";
+@import "../node_modules/bootstrap/scss/list-group";
+@import "../node_modules/bootstrap/scss/modal";
+@import "../node_modules/bootstrap/scss/nav";
+@import "../node_modules/bootstrap/scss/navbar";
+@import "../node_modules/bootstrap/scss/offcanvas";
+@import "../node_modules/bootstrap/scss/pagination";
+@import "../node_modules/bootstrap/scss/placeholders";
+@import "../node_modules/bootstrap/scss/popover";
+@import "../node_modules/bootstrap/scss/progress";
+@import "../node_modules/bootstrap/scss/reboot";
+@import "../node_modules/bootstrap/scss/spinners";
+@import "../node_modules/bootstrap/scss/tables";
+@import "../node_modules/bootstrap/scss/toasts";
+@import "../node_modules/bootstrap/scss/tooltip";
+@import "../node_modules/bootstrap/scss/transitions";
+@import "../node_modules/bootstrap/scss/type";
+@import "../node_modules/bootstrap/scss/utilities";
+@import "../node_modules/bootstrap/scss/utilities/api";
+
+//Buttons
+.btn-Reboot {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #369cf6;
+    --bs-btn-border-color: #369cf6;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #2280d1;
+    --bs-btn-hover-border-color: #2280d1;
+    --bs-btn-focus-shadow-rgb: 67, 221, 157;
+    --bs-btn-active-color: #369cf6;
+    --bs-btn-active-bg: #2280d1;
+    --bs-btn-active-border-color: #2280d1;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #369cf6;
+    --bs-btn-disabled-border-color: #369cf6;
+  }
+
 $offset: 187;
 $duration: 1.4s;
 
@@ -53,7 +130,8 @@ $duration: 1.4s;
     }
 }
 
-html, body {
+html,
+body {
     width: 100%;
     height: 100%;
     margin: 0;
@@ -69,37 +147,39 @@ html, body {
     width: 100%;
     height: 100%;
 
-    > div {
+    >div {
         background-color: rgba(gray, 80%);
         min-width: 300px;
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
 
-        > h2, > span {
+        >h2,
+        >span {
             display: block;
             text-align: center;
             padding: 10px;
             width: 100%;
         }
 
-        > h2 {
+        >h2 {
             margin: 0;
             font-size: 24px;
             color: white;
             background-color: rgba(#000, 50%);
         }
 
-        > span {
+        >span {
             color: white;
             font-size: 18px;
         }
 
-        > div {
+        >div {
             background-color: rgba(#000, 20%);
             border-radius: 10px;
             margin: 0 10px 10px 10px;
-            > button {
+
+            >button {
                 border: solid #000 1px;
                 border-radius: 10px;
                 font-size: 20px;
@@ -118,27 +198,29 @@ html, body {
 }
 
 .loading {
-    background-color: gray;
+    background-color: rgba(87, 87, 87, 0.581);
     position: absolute;
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
     height: 100%;
+    z-index: 99999;
+    position: fixed;
 
-    > div {
+    >div {
         display: grid;
         justify-items: center;
         align-content: center;
 
-        > h2 {
+        >h2 {
             color: white;
         }
 
-        > .spinner {
+        >.spinner {
             animation: rotator $duration linear infinite;
 
-            > .path {
+            >.path {
                 stroke-dasharray: $offset;
                 stroke-dashoffset: 0;
                 transform-origin: center;
@@ -150,6 +232,20 @@ html, body {
     }
 }
 
+#menu {
+    background-color: $menu-bg-color;
+    padding: 0;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+}
+
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 .index {
     text-align: center;
     display: flex;
@@ -157,25 +253,25 @@ html, body {
     background: url("/img/index_background.png") no-repeat center center fixed;
     background-size: cover;
 
-    > .login {
+    >.login {
         margin: auto;
         background-color: $LoginBackgroundColor;
         width: 400px;
 
 
-        > .header {
+        >.header {
             background-color: $LoginTitleColor;
             font-size: 24px;
             padding: 10px 0;
             color: white;
         }
 
-        > .infos {
+        >.infos {
             color: white;
             margin-top: 20px;
 
-            > form {
-                > .field {
+            >form {
+                >.field {
                     margin: 10px 20px;
                     display: flex;
                     justify-content: center;
@@ -184,11 +280,11 @@ html, body {
                     border-radius: 10px;
                     background-color: rgba($LoginBackgroundColor, 20%);
 
-                    > label {
+                    >label {
                         border-top-left-radius: 10px;
                         border-bottom-left-radius: 10px;
 
-                        > span {
+                        >span {
                             width: 50px;
                             height: 50px;
                             display: flex;
@@ -200,7 +296,7 @@ html, body {
                         }
                     }
 
-                    > .textfield {
+                    >.textfield {
                         margin: 0;
                         height: 50px;
                         border: 0;
@@ -227,7 +323,7 @@ html, body {
                     }
                 }
 
-                > .btn {
+                >.btn {
                     display: inline-flex;
                     justify-content: center;
                     align-items: center;
@@ -236,7 +332,7 @@ html, body {
                     background-color: rgba($LoginBackgroundColor, 40%);
                     margin-bottom: 20px;
 
-                    > *:hover {
+                    >*:hover {
                         cursor: pointer;
                     }
 
@@ -245,13 +341,13 @@ html, body {
                         background-color: lighten(rgba($LoginBackgroundColor, 20%), 60%);
                     }
 
-                    > label {
-                        > span {
+                    >label {
+                        >span {
                             padding: 10px 0 10px 10px;
                         }
                     }
 
-                    > input[type="submit"] {
+                    >input[type="submit"] {
                         font-size: 20px;
                         padding: 10px;
                         background-color: #ffffff00;

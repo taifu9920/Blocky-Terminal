@@ -17,15 +17,18 @@
   },
   "homepage": "https://github.com/taifu9920/JS-ServiceTerminal#readme",
   "dependencies": {
+    "bootstrap": "^5.2.3",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
     "csurf": "^1.11.0",
     "dotenv": "^16.0.1",
     "ejs": "^3.1.8",
+    "ejs-locals": "^1.0.2",
     "express": "^4.18.1",
     "express-session": "^1.17.3",
     "express-winston": "^4.2.0",
     "jquery": "^3.6.0",
+    "jquery.cookie": "^1.4.1",
     "winston": "^3.8.1",
     "winston-daily-rotate-file": "^4.7.1"
   }

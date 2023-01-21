@@ -1,5 +1,8 @@
 require('dotenv').config();
 require('winston-daily-rotate-file')
+const fs = require('fs');
+const path = require('path');
+
 const express = require("express")
     , winston = require('winston')
     , { combine, timestamp, printf, colorize, align } = winston.format
@@ -24,16 +27,18 @@ let logger = winston.createLogger({
             , maxFiles: '31d'
         })
     ]
-, });
+    ,
+});
 
 let app = express();
 app.use(compression())
+app.engine('ejs', require("ejs-locals"))
 app.set('view engine', 'ejs');
 
 app.use(session({
     secret: process.env["session_secret"],
     saveUninitialized: false,
-    resave: true, 
+    resave: true,
 }));
 
 app.use(expressWinston.logger({
@@ -47,7 +52,7 @@ app.use(expressWinston.logger({
     , meta: true
     , msg: "{{req.socket.remoteAddress}} ({{req.headers['x-forwarded-for']}}) - {{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
     , expressFormat: false
-    , ignoreRoute: function(req, res) { return false; }
+    , ignoreRoute: function (req, res) { return false; }
 }));
 
 app.use("/", express.static("static"));
@@ -56,13 +61,13 @@ app.use(cookieParser());
 
 // Before Login
 
-app.get("/signin", csurf({ cookie: true }), function(req, res) {
+app.get("/signin", csurf({ cookie: true }), function (req, res) {
     let cookie = req.cookies["msg"];
     res.clearCookie("msg", { httpOnly: true });
     res.render("index", { csrfToken: req.csrfToken(), "msg": cookie });
 });
 
-app.post("/login", express.urlencoded({ extended: false }), csurf({ cookie: true }), function(req, res) {
+app.post("/login", express.urlencoded({ extended: false }), csurf({ cookie: true }), function (req, res) {
     if (req.body["account"] == process.env["account"] && req.body["password"] == process.env["password"]) {
         req.session.username = process.env["account"];
         res.redirect("/");
@@ -73,20 +78,35 @@ app.post("/login", express.urlencoded({ extended: false }), csurf({ cookie: true
     }
 });
 
-app.get("/logout", function(req, res) {
+app.get("/logout", function (req, res) {
     req.session.destroy();
     res.cookie("msg", "You have been logout.", { httpOnly: true });
     res.redirect('/signin');
 });
 
 // After login
-function auth(req, res, next){
+function auth(req, res, next) {
     if (req.session.username == process.env["account"]) next()
-    else return res.redirect('/signin')
+    else {
+        if (req.cookies["msg"] == undefined) {
+            return res.redirect('/signin')
+        } else {
+            res.cookie("msg", "Wrong information", { httpOnly: true });
+            return res.redirect('/signin')
+        }
+    }
 }
 
-app.get("/", auth, function(req, res) {
-    res.render("home", { msg: "Hello user: " + req.session.username });
+app.get("/", auth, function (req, res) {
+    const servers = fs.readdirSync("Servers").filter(loc => fs.statSync(path.join("Servers", loc)).isDirectory());
+    console.log(servers);
+    res.render("home", { username: req.session.username, msg: "", server_list: servers });
+});
+
+app.get("/server/:folder", auth, function (req, res) {
+    const servers = fs.readdirSync("Servers").filter(loc => fs.statSync(path.join("Servers", loc)).isDirectory());
+
+    res.render("server", { username: req.session.username, msg: "", server_list: servers, server: req.params["folder"] });
 });
 
 app.use((req, res) => {
