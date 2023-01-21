@@ -1,1 +1,0 @@
-java -Xms1024m -Xmx1024m -XX:PermSize=128m -jar server.jar nogui
