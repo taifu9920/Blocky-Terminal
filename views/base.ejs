@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
   <script src="/js/bootstrap.bundle.min.js"></script>
   <script src="/js/jquery.cookie.js"></script>
+  <script src="/js/socket.io.min.js"></script>
 </head>
 
 <body>
@@ -34,12 +35,10 @@
     <%- body %>
 
     <script>
-      $(window).on(' load', function() {
-        $('.loading').fadeOut("slow");
-      });
       if ("<%= msg == undefined ? '' : msg %>" != "") {
         $("#alert").fadeIn("slow");
       }
+      jQuery(document).on("load", $('.loading').fadeOut("slow"))
     </script>
   </body>
 

@@ -1,5 +1,35 @@
 <% layout('base') %>
 
+<script>
+  var socket = io("/");
+  socket.on('connect', () => {
+    $("#msg").text("SocketIO connected to Service Terminal")
+    $("#msg").css("background-color", "green")
+  });
+  socket.on('disconnect', () => {
+    $("#msg").text("Cannot connect to Service Terminal!")
+    $("#msg").css("background-color", "red")
+  });
+  socket.on("poweron", folder => {
+    if (folder == "<%= server %>") {
+      $("#card").attr("class", "card m-2 overflow-hidden flex-grow-1")
+      $("#shutbtn").show();
+      $("#bootbtn").hide();
+    }
+    console.log(`#${folder}`)
+    $(`#${folder.replaceAll(" ", "_")}`).attr("class", "nav-link active d-flex justify-content-center server powerOn")
+  })
+  socket.on("poweroff", folder => {
+    if (folder == "<%= server %>") {
+      $("#card").attr("class", "card text-bg-secondary m-2 overflow-hidden flex-grow-1")
+      $("#shutbtn").hide();
+      $("#bootbtn").show();
+    }
+    $(`#${folder.replaceAll(" ", "_")}`).attr("class", "nav-link active d-flex justify-content-center server")
+  })
+
+</script>
+
 <div class="container-fluid" style="height:100%;max-height:100%;">
   <div class="row" style="height:inherit;max-height:inherit;">
     <div class="col-auto" style="max-height:inherit;" id="menu">
@@ -29,7 +59,7 @@
         <div style="overflow:scroll;">
           <% for(i = 0; i < server_list.length; i++) { %>
           <li class="nav-item">
-            <a class="nav-link active d-flex justify-content-center" href="/server/<%= server_list[i] %>">
+            <a class="nav-link active d-flex justify-content-center server" id="<%= server_list[i].replaceAll(" ", "_") %>" href="/server/<%= server_list[i] %>">
               <span class="material-symbols-outlined">terminal</span>
               <span class="nav-link active collapse collapse-horizontal menus p-0" style="line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">　</span>
               <span class="nav-link active collapse collapse-horizontal menus p-0" style="white-space:nowrap;line-height:24px; color: inherit; transition:width 0.5s ease-in-out;"><%= server_list[i] %></span>
@@ -39,17 +69,17 @@
         </div>
       </ul>
     </div>
-    <div class="col p-0">
-      <div class="container-fluid">
-        <div class="row bg-white">
-          <div class="col pt-2 pb-2 text-center text-bg-secondary">Welcome to Service Terminal, <%= username %></div>
-          <a class="btn btn-dark col-auto ms-auto pt-2 pb-2 d-flex" style="border-radius:0;" href="/logout">
+    <div class="col p-0" style="max-height:inherit;height:inherit;" >
+      <div class="container-fluid d-flex flex-column" style="max-height:inherit;height:inherit;">
+        <div class="row">
+          <div class="col pt-2 pb-2 text-center text-white" style="line-height:24px; background-color: gray;" id="msg"></div>
+          <a class="btn btn-dark col-auto ms-auto pt-2 pb-2 d-flex" style="border-radius:0; border:none;" href="/logout">
             <span class="material-symbols-outlined" style="margin-right:5px;">logout</span>Logout
           </a>
         </div>
 
-        <div class="row">
-          <div class="col p-0">
+        <div class="row flex-grow-1">
+          <div class="col p-0 d-flex flex-column">
             <%- body %>
           </div>
         </div>
@@ -65,4 +95,5 @@
     })
     $("#menutoggle").click()
   }
+  socket.emit("init")
 </script>

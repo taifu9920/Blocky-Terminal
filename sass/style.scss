@@ -198,7 +198,7 @@ body {
 }
 
 .loading {
-    background-color: rgba(87, 87, 87, 0.581);
+    background-color: rgba(160, 160, 160, 0.936);
     position: absolute;
     display: flex;
     justify-content: center;
@@ -235,6 +235,21 @@ body {
 #menu {
     background-color: $menu-bg-color;
     padding: 0;
+    .nav-link{
+        &.server{
+            color:rgb(255, 61, 55);
+            &:hover{
+                color:rgb(223, 45, 45);
+            }
+            &.powerOn{
+                color:rgb(54, 252, 54);
+                &:hover{
+                    color:rgb(106, 211, 106);
+                }
+            }
+        }
+        
+    }
 }
 
 *::-webkit-scrollbar {

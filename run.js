@@ -2,6 +2,7 @@ require('dotenv').config();
 require('winston-daily-rotate-file')
 const fs = require('fs');
 const path = require('path');
+const { spawn } = require("child_process");
 
 const express = require("express")
     , winston = require('winston')
@@ -59,6 +60,49 @@ app.use("/", express.static("static"));
 
 app.use(cookieParser());
 
+
+var serverStatus = new Map();
+
+var http = require('http').createServer(app);
+var io = require('socket.io')(http);
+var iconv = require("iconv-lite")
+io.on('connection',  (socket) => {
+    socket.on("cmd", data => {
+        var process = serverStatus.get(data["folder"])
+        if (process != undefined) process.stdin.write(data["cmd"]);
+    })
+    socket.on("init", () => {
+        serverStatus.forEach((v, k, self)=>{
+            socket.emit("poweron", k);
+        })
+    })
+    socket.on("toggle", folder => {
+        if (serverStatus.get(folder) == undefined) {
+            //power on
+            serverStatus.set(folder, spawn("ping", ["1.1.1.1"]));
+
+            serverStatus.get(folder).stdout.on("data", data => {
+                socket.emit("log", iconv.decode(data, "big5"));
+            })
+
+            serverStatus.get(folder).stderr.on("data", data => {
+                socket.emit("log", iconv.decode(data, "big5"));
+            })
+
+            serverStatus.get(folder).on("exit", code=>{
+                socket.emit("log", `Process exited with code ${code}.`);
+                serverStatus.delete(folder);
+                io.emit("poweroff", folder)
+            })
+            io.emit("poweron", folder)
+        } else {
+            //power off
+            serverStatus.get(folder).stdin.write("stop");
+        }
+    })
+});
+http.listen(process.env["port"])
+
 // Before Login
 
 app.get("/signin", csurf({ cookie: true }), function (req, res) {
@@ -99,8 +143,7 @@ function auth(req, res, next) {
 
 app.get("/", auth, function (req, res) {
     const servers = fs.readdirSync("Servers").filter(loc => fs.statSync(path.join("Servers", loc)).isDirectory());
-    console.log(servers);
-    res.render("home", { username: req.session.username, msg: "", server_list: servers });
+    res.render("home", { username: req.session.username, msg: "", server_list: servers, server:"" });
 });
 
 app.get("/server/:folder", auth, function (req, res) {
