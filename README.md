@@ -1,2 +1,12 @@
-# JS-ServiceTerminal
-Service Terminal made from JavaScript, the goal is to make a personal cloud computing server, can be deploy to multiple computers and managing on one host
+# Blocky Terminal
+#### A Minecraft server web management tool on NodeJS, 
+#### You can do any operations on the web interface,
+### Including :
+* boot
+* stop
+* ~~reboot~~ (WIP)
+* ~~scram~~ (WIP)
+* ~~auto reboot~~ (WIP)
+* ~~config edit~~ (WIP)
+* ~~storage system modify~~ (WIP)
+## main functions still WIP for now!
