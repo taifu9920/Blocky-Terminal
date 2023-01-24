@@ -1,21 +1,91 @@
 <% layout('layout') %>
+<div class="modal fade" id="modalConfig" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header row pb-0">
+        <h1 class="modal-title fs-5 col" id="modalLabel">"<%= server %>" Configure</h1>
+        <div class="col-auto me-auto">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">
+            <span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Discard">close</span>
+          </button>
+        </div>
+        <ul class="nav nav-pills nav-fill mt-2" id="configs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Options</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">server.properties</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">Logs</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#disabled-tab-pane" type="button" role="tab" aria-controls="disabled-tab-pane" aria-selected="false">mods</button>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-body">
+        <div class="tab-content" id="myTabContent">
+          <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+            <div class="input-group mb-2">
+              <span class="input-group-text">java -jar </span>
+              <datalist id="jarList">
+                <option value="server.jar">
+                <option value="abc.jar">
+                <option value="test.jar">
+              </datalist>
+              <input type="text" class="form-control bg-white" list="jarList" placeholder="jar filename"/>
+              <span class="input-group-text">-Xmx</span>
+              <input type="number" id="Xmx" min="0.5" max="16" value="0.5" class="form-control bg-white" style="border-color:#ced4da;z-index:1; max-width:80px;" placeholder="Max">
+              <span class="input-group-text">G</span>
+              <span class="input-group-text">-Xms</span>
+              <input type="number" id="Xms" min="0.5" max="16" value="0.5" class="form-control bg-white" style="border-color:#ced4da;z-index:1; max-width:80px;" placeholder="Min">
+              <span class="input-group-text">G</span>
+              <input type="text" class="form-control bg-white" style="border-color:#ced4da;z-index:1;" placeholder="Extra Argument">
+            </div>
+
+            <label for="maxRAM" class="form-label">Max Memory (-Xmx)</label>
+            <input type="range" onchange="$('#Xmx').val($(this).val())" oninput="$('#Xmx').val($(this).val())" class="form-range" min="0.5" max="16" step="0.5" id="maxRAM" value="0.5">
+            <label for="minRAM" class="form-label">Min Memory (-Xms)</label>
+            <input type="range" onchange="$('#Xms').val($(this).val())" oninput="$('#Xms').val($(this).val())" class="form-range mb-2" min="0.5" max="16" step="0.5" id="minRAM" value="0.5">
+
+
+            <button type="button" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Auto Reboot"><span class="material-symbols-outlined">event_repeat</span></button>
+            <button type="button" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="No Auto Reboot"><span class="material-symbols-outlined">event_repeat</span></button>
+          </div>
+          <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save">Save</span></button>
+          </div>
+          <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save">Save</span></button>
+          </div>
+          <div class="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="card text-bg-secondary m-2 overflow-hidden flex-grow-1" id="card">
   <div class="card-header row">
     <h5 class="col d-flex mb-0 justify-content-center align-items-center"><%= server %></h5>
     <div class="btn-toolbar col-auto" role="toolbar" aria-label="Toolbar with button groups">
       <div class="btn-group me-2" role="group">
-        <button type="button" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Auto Reboot"><span class="material-symbols-outlined">event_repeat</span></button>
-        <button type="button" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="No Auto Reboot"><span class="material-symbols-outlined">event_repeat</span></button>
+        <button type="button" class="btn btn-config" data-bs-toggle="modal" data-bs-target="#modalConfig"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Configure">Settings</span></button>
       </div>
       <div class="btn-group me-2" role="group">
-        <button type="button" onclick='socket.emit("scram", "<%= server %>")' class="btn btn-warning text-white" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Scram"><span class="material-symbols-outlined">emergency_home</span></button>
-        <button type="button" onclick='socket.emit("reboot", "<%= server %>")' class="btn btn-reboot text-white" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Reboot"><span class="material-symbols-outlined">restart_alt</span></button>
+        <button type="button" onclick='socket.emit("scram", "<%= server %>")' class="btn btn-scram"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Scram">emergency_home</span></button>
+      </div>
+      <div class="btn-group me-2" role="group">
+        <button type="button" onclick='socket.emit("reboot", "<%= server %>")' class="btn btn-reboot text-white"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Reboot">restart_alt</span></button>
       </div>
       <div class="btn-group" id="shutbtn" role="group" style="display:none;">
-        <button type="button" onclick='socket.emit("toggle", "<%= server %>")' class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Shutdown"><span class="material-symbols-outlined">power_settings_new</span></button>
+        <button type="button" onclick='socket.emit("toggle", "<%= server %>")' class="btn btn-danger"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Shutdown">power_settings_new</span></button>
       </div>
       <div class="btn-group" id="bootbtn" role="group">
-        <button type="button" onclick='socket.emit("toggle", "<%= server %>")' class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Power on"><span class="material-symbols-outlined">power_settings_new</span></button>
+        <button type="button" onclick='socket.emit("toggle", "<%= server %>")' class="btn btn-success"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Power on">power_settings_new</span></button>
       </div>
     </div>
   </div>

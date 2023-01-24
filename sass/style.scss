@@ -18,6 +18,7 @@ $nav-pills-link-active-color: rgb(96, 247, 121);
 $accordion-button-bg: rgb(86, 86, 86);
 $accordion-button-active-bg: rgb(59, 59, 59);
 $accordion-button-active-color: #fff;
+$component-active-bg: rgb(83, 149, 249);
 // Include any default variable overrides here
 
 @import "../node_modules/bootstrap/scss/variables";
@@ -77,7 +78,46 @@ $accordion-button-active-color: #fff;
     --bs-btn-disabled-color: #fff;
     --bs-btn-disabled-bg: #369cf6;
     --bs-btn-disabled-border-color: #369cf6;
-  }
+}
+
+.btn-config {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #ff850b;
+    --bs-btn-border-color: #ff850b;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #e89418;
+    --bs-btn-hover-border-color: #e89418;
+    --bs-btn-focus-shadow-rgb: 67, 221, 157;
+    --bs-btn-active-color: #ff850b;
+    --bs-btn-active-bg: #e89418;
+    --bs-btn-active-border-color: #e89418;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #ff850b;
+    --bs-btn-disabled-border-color: #ff850b;
+}
+
+.btn-scram {
+    background: repeating-linear-gradient(45deg,
+            #fec820,
+            #fec820 4px,
+            #1e2221 4px,
+            #1e2221 8px);
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #fec820;
+    --bs-btn-border-color: #fec820;
+    --bs-btn-hover-color: rgb(255, 92, 92);
+    --bs-btn-hover-bg: #e89418;
+    --bs-btn-hover-border-color: #e89418;
+    --bs-btn-focus-shadow-rgb: 67, 221, 157;
+    --bs-btn-active-color: #fec820;
+    --bs-btn-active-bg: #e89418;
+    --bs-btn-active-border-color: #e89418;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #fec820;
+    --bs-btn-disabled-border-color: #fec820;
+}
 
 $offset: 187;
 $duration: 1.4s;
@@ -235,20 +275,35 @@ body {
 #menu {
     background-color: $menu-bg-color;
     padding: 0;
-    .nav-link{
-        &.server{
-            color:rgb(255, 61, 55);
-            &:hover{
-                color:rgb(223, 45, 45);
+
+    .nav-link {
+        &.server {
+            color: rgb(255, 61, 55);
+
+            &:hover {
+                color: rgb(223, 45, 45);
             }
-            &.powerOn{
-                color:rgb(54, 252, 54);
-                &:hover{
-                    color:rgb(106, 211, 106);
+
+            &.powerOn {
+                color: rgb(54, 252, 54);
+
+                &:hover {
+                    color: rgb(106, 211, 106);
                 }
             }
         }
-        
+
+    }
+}
+
+#configs{
+    padding-left:12px!important;
+    .nav-link{
+        color: black;
+        &.active{
+            background-color: $menu-bg-color;
+            color:white;
+        }
     }
 }
 

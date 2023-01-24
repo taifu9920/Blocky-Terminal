@@ -1,5 +1,6 @@
 require('dotenv').config();
 require('winston-daily-rotate-file')
+require("./database.js")
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require("child_process");
@@ -37,7 +38,7 @@ app.engine('ejs', require("ejs-locals"))
 app.set('view engine', 'ejs');
 
 app.use(session({
-    secret: process.env["session_secret"],
+    secret: db["secret"],
     saveUninitialized: false,
     resave: true,
 }));
