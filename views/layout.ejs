@@ -3,11 +3,11 @@
 <script>
   var socket = io("/");
   socket.on('connect', () => {
-    $("#msg").text("SocketIO connected to Service Terminal")
+    $("#msg").text("SocketIO connected to Blocky Terminal")
     $("#msg").css("background-color", "green")
   });
   socket.on('disconnect', () => {
-    $("#msg").text("Cannot connect to Service Terminal!")
+    $("#msg").text("Cannot connect to Blocky Terminal!")
     $("#msg").css("background-color", "red")
   });
   socket.on("poweron", folder => {
