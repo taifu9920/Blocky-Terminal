@@ -1,4 +1,20 @@
 <% layout('layout') %>
+<div class="toast-container top-0 start-50 translate-middle-x position-fixed bottom-0 end-0 p-3">
+  <div id="toast_success" class="toast text-bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">Message</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+<div class="toast-container top-0 start-50 translate-middle-x position-fixed bottom-0 end-0 p-3">
+  <div id="toast_fail" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">Message</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
 <div class="modal fade" id="modalConfig" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
@@ -14,13 +30,7 @@
             <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Options</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">server.properties</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">Logs</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#disabled-tab-pane" type="button" role="tab" aria-controls="disabled-tab-pane" aria-selected="false">mods</button>
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">File System</button>
           </li>
         </ul>
       </div>
@@ -34,14 +44,14 @@
                 <option value="abc.jar">
                 <option value="test.jar">
               </datalist>
-              <input type="text" class="form-control bg-white" list="jarList" placeholder="jar filename"/>
+              <input type="text" class="form-control bg-white" list="jarList" placeholder="jar filename" id="jarfilename" />
               <span class="input-group-text">-Xmx</span>
               <input type="number" id="Xmx" min="0.5" max="16" value="0.5" class="form-control bg-white" style="border-color:#ced4da;z-index:1; max-width:80px;" placeholder="Max">
               <span class="input-group-text">G</span>
               <span class="input-group-text">-Xms</span>
               <input type="number" id="Xms" min="0.5" max="16" value="0.5" class="form-control bg-white" style="border-color:#ced4da;z-index:1; max-width:80px;" placeholder="Min">
               <span class="input-group-text">G</span>
-              <input type="text" class="form-control bg-white" style="border-color:#ced4da;z-index:1;" placeholder="Extra Argument">
+              <input type="text" class="form-control bg-white" style="border-color:#ced4da;z-index:1;" placeholder="Extra Argument" id="arg">
             </div>
 
             <label for="maxRAM" class="form-label">Max Memory (-Xmx)</label>
@@ -49,17 +59,12 @@
             <label for="minRAM" class="form-label">Min Memory (-Xms)</label>
             <input type="range" onchange="$('#Xms').val($(this).val())" oninput="$('#Xms').val($(this).val())" class="form-range mb-2" min="0.5" max="16" step="0.5" id="minRAM" value="0.5">
 
+            <button type="button" class="btn btn-success" onclick="saveConfig()"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save">Save</span></button>
 
             <button type="button" class="btn btn-success" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Auto Reboot"><span class="material-symbols-outlined">event_repeat</span></button>
             <button type="button" class="btn btn-danger" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="No Auto Reboot"><span class="material-symbols-outlined">event_repeat</span></button>
           </div>
           <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-            <button type="button" class="btn btn-success" data-bs-dismiss="modal"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save">Save</span></button>
-          </div>
-          <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
-            <button type="button" class="btn btn-success" data-bs-dismiss="modal"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save">Save</span></button>
-          </div>
-          <div class="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">
 
           </div>
         </div>
@@ -103,8 +108,36 @@
 <script>
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
   const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-  socket.on("log", log => {
-    $("#logs").prepend(`<span>${log}</span>`)
+  socket.on("log", data => {
+    if (data["folder"] == "<%= server %>") {
+      $("#logs").prepend(`<span>${data["msg"]}</span>`)
+    }
+  })
+
+  socket.on("init", () => {
+    socket.emit("fetch", "<%= server %>")
+  })
+
+  socket.on("alert", data => {
+    if (data["type"] == 0) {
+      $("#toast_success .toast-body").text(data["msg"])
+      new bootstrap.Toast($("#toast_success")).show();
+    } else if (data["type"] == 1) {
+      $("#toast_fail .toast-body").text(data["msg"])
+      new bootstrap.Toast($("#toast_fail")).show();
+    }
+  })
+
+  socket.on("update_config", data => {
+    if (data["folder"] == "<%= server %>") {
+      configs = data["config"]
+      $("#arg").val(configs["arg"])
+      $("#jarfilename").val(configs["filename"])
+      $("#maxRAM").val(configs["Xmx"])
+      $("#minRAM").val(configs["Xms"])
+      $("#Xmx").val(configs["Xmx"])
+      $("#Xms").val(configs["Xms"])
+    }
   })
 
   function sendCmd() {
@@ -115,5 +148,15 @@
       })
       $("#cmd").val("")
     }
+  }
+
+  function saveConfig() {
+    socket.emit("config", {
+      folder: "<%= server %>",
+      arg: $("#arg").val(),
+      filename: $("#jarfilename").val(),
+      Xmx: $("#Xmx").val(),
+      Xms: $("#Xms").val()
+    })
   }
 </script>

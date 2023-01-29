@@ -1,6 +1,6 @@
 require('dotenv').config();
 require('winston-daily-rotate-file')
-require("./database.js")
+const { save, load } = require("./database.js")
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require("child_process");
@@ -37,6 +37,8 @@ app.use(compression())
 app.engine('ejs', require("ejs-locals"))
 app.set('view engine', 'ejs');
 
+db = load();
+
 app.use(session({
     secret: db["secret"],
     saveUninitialized: false,
@@ -61,21 +63,24 @@ app.use("/", express.static("static"));
 
 app.use(cookieParser());
 
-
 var serverStatus = new Map();
-
+save()
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 var iconv = require("iconv-lite")
-io.on('connection',  (socket) => {
+io.on('connection', (socket) => {
     socket.on("cmd", data => {
         var process = serverStatus.get(data["folder"])
         if (process != undefined) process.stdin.write(data["cmd"]);
     })
     socket.on("init", () => {
-        serverStatus.forEach((v, k, self)=>{
+        serverStatus.forEach((v, k, self) => {
             socket.emit("poweron", k);
         })
+        socket.emit("init")
+    })
+    socket.on("fetch", folder => {
+        socket.emit("update_config", { folder: folder, config: db[folder] })
     })
     socket.on("toggle", folder => {
         if (serverStatus.get(folder) == undefined) {
@@ -83,15 +88,15 @@ io.on('connection',  (socket) => {
             serverStatus.set(folder, spawn("ping", ["1.1.1.1"]));
 
             serverStatus.get(folder).stdout.on("data", data => {
-                socket.emit("log", iconv.decode(data, "big5"));
+                io.emit("log", { folder: folder, msg: iconv.decode(data, "big5") });
             })
 
             serverStatus.get(folder).stderr.on("data", data => {
-                socket.emit("log", iconv.decode(data, "big5"));
+                io.emit("log", { folder: folder, msg: iconv.decode(data, "big5") });
             })
 
-            serverStatus.get(folder).on("exit", code=>{
-                socket.emit("log", `Process exited with code ${code}.`);
+            serverStatus.get(folder).on("exit", code => {
+                io.emit("log", { folder: folder, msg: `Process exited with code ${code}.` });
                 serverStatus.delete(folder);
                 io.emit("poweroff", folder)
             })
@@ -100,6 +105,18 @@ io.on('connection',  (socket) => {
             //power off
             serverStatus.get(folder).stdin.write("stop");
         }
+    })
+    socket.on("config", data => {
+        folder = data["folder"]
+        db[folder] = {
+            arg: data["arg"],
+            filename: data["filename"],
+            Xmx: data["Xmx"],
+            Xms: data["Xms"]
+        }
+        save()
+        socket.emit("alert", { type: 0, msg: "Config file saved!" })
+        io.emit("update_config", { folder: folder, config: db[folder] })
     })
 });
 http.listen(process.env["port"])
@@ -144,7 +161,7 @@ function auth(req, res, next) {
 
 app.get("/", auth, function (req, res) {
     const servers = fs.readdirSync("Servers").filter(loc => fs.statSync(path.join("Servers", loc)).isDirectory());
-    res.render("home", { username: req.session.username, msg: "", server_list: servers, server:"" });
+    res.render("home", { username: req.session.username, msg: "", server_list: servers, server: "" });
 });
 
 app.get("/server/:folder", auth, function (req, res) {
