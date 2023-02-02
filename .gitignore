@@ -9,6 +9,7 @@ lerna-debug.log*
 Servers/*
 db.json
 db.json.old
+serverLogs
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
