@@ -4,6 +4,13 @@ const { save, load } = require("./database.js")
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require("child_process");
+const os = require("os");
+const kill = require('tree-kill');
+const pidusageTree = require('pidusage-tree')
+const es = require('event-stream');
+const readLastLines = require('read-last-lines');
+
+maxRAM_MB = os.totalmem() / (1024 * 1024);
 
 const express = require("express")
     , winston = require('winston')
@@ -31,6 +38,51 @@ let logger = winston.createLogger({
     ]
     ,
 });
+
+function getLoggerLoc(folder) {
+    return `serverLogs/${folder}.log`
+}
+
+function filter(parameter) {
+    parameter = parameter.trim()
+    if (parameter != "") return parameter.split(" ")[0];
+    return undefined;
+}
+function filter_escape(parameter) {
+    return parameter.replaceAll("&", "").replaceAll("|", "").trim()
+}
+
+function servers() {
+    return fs.readdirSync("Servers").filter(loc => fs.statSync(path.join("Servers", loc)).isDirectory())
+}
+var rams = new Map();
+
+async function UsageUpdator(folder) {
+    result = await pidusageTree(serverStatus.get(folder).pid)
+    temp = 0;
+    for (var o in result) temp += result[o]["memory"]
+    rams.set(folder, temp)
+}
+
+function jarfiles(folder) {
+    return fs.readdirSync(`Servers/${folder}`).filter(loc => fs.statSync(path.join(`Servers/${folder}`, loc)).isFile() && loc.endsWith(".jar"))
+}
+
+function checks() {
+    serverlist = servers();
+    for (i = 0; i < serverlist.length; i++) {
+        folder = serverlist[i]
+        if (db[folder] == undefined) {
+            db[folder] = {
+                java: "java",
+                arg: "",
+                filename: jarfiles(folder)[0],
+                Xmx: 0.5,
+                Xms: 0.5
+            }
+        }
+    }
+}
 
 let app = express();
 app.use(compression())
@@ -70,53 +122,127 @@ var io = require('socket.io')(http);
 var iconv = require("iconv-lite")
 io.on('connection', (socket) => {
     socket.on("cmd", data => {
-        var process = serverStatus.get(data["folder"])
-        if (process != undefined) process.stdin.write(data["cmd"]);
+        var process = serverStatus.get(data["folder"].trim())
+        if (process != undefined) process.stdin.write(data["cmd"].trim() + "\n");
     })
     socket.on("init", () => {
+        checks();
         serverStatus.forEach((v, k, self) => {
             socket.emit("poweron", k);
         })
         socket.emit("init")
     })
     socket.on("fetch", folder => {
+        folder = filter_escape(folder)
         socket.emit("update_config", { folder: folder, config: db[folder] })
+        loc = getLoggerLoc(folder)
+        try {
+            fs.accessSync(loc, fs.constants.R_OK)
+            var buffer = ""
+            readLastLines.read(loc, 500).then((lines) => socket.emit("log", { folder: folder, msg: `${lines}` }));
+        } catch (err) {
+
+        }
     })
-    socket.on("toggle", folder => {
+    socket.on("newJava", path => {
+        path = filter_escape(path)
+        db["javas"] = db["javas"].concat(path)
+        save();
+        socket.emit("alert", { folder: folder, type: 0, msg: "New java path appended!" })
+        io.emit("newJava", path)
+    })
+    socket.on("deleteJava", path => {
+        path = filter_escape(path)
+        db["javas"] = db["javas"].filter(x => filter_escape(x) != path)
+        save();
+        socket.emit("alert", { folder: folder, type: 0, msg: "Deleted a java path" })
+        io.emit("deleteJava", path)
+    })
+    socket.on("scram", folder => {
+        folder = filter_escape(folder)
+        if (serverStatus.get(folder) != undefined) {
+            kill(serverStatus.get(folder).pid);
+            io.emit("alert", { folder: folder, type: 0, msg: "Server killed!" })
+        }
+    })
+    function toggle(folder) {
+        folder = filter_escape(folder)
         if (serverStatus.get(folder) == undefined) {
             //power on
-            serverStatus.set(folder, spawn("ping", ["1.1.1.1"]));
+            if (db[folder] == undefined || db[folder]["filename"] == "") {
+                //no jarfile
+                socket.emit("alert", { folder: folder, type: 1, msg: "Need jar filename to boot, require configure!" })
+            } else {
+                execs = [`-Xmx${db[folder]["Xmx"] * 1024}M`, `-Xms${db[folder]["Xms"] * 1024}M`].concat(db[folder]["arg"].split(" "), "-jar", db[folder]["filename"], "nogui")
+                cmd = [db[folder]["java"]].concat(execs).join(" ") + "\n"
 
-            serverStatus.get(folder).stdout.on("data", data => {
-                io.emit("log", { folder: folder, msg: iconv.decode(data, "big5") });
-            })
+                io.emit("log", { folder: folder, msg: cmd })
+                serverStatus.set(folder, spawn(`"${db[folder]["java"]}"`, execs, { cwd: `./Servers/${folder}/`, shell: true }));
+                if (!fs.existsSync("serverLogs")) {
+                    fs.mkdirSync("serverLogs");
+                }
+                serverStatus.get(folder).loggerStream = fs.createWriteStream(getLoggerLoc(folder), { flags: 'w' });
+                serverStatus.get(folder).loggerStream.write(cmd)
 
-            serverStatus.get(folder).stderr.on("data", data => {
-                io.emit("log", { folder: folder, msg: iconv.decode(data, "big5") });
-            })
+                function log(data) {
+                    decoded = iconv.decode(data, "big5");
+                    io.emit("log", { folder: folder, msg: decoded });
+                    serverStatus.get(folder).loggerStream.write(decoded)
+                }
 
-            serverStatus.get(folder).on("exit", code => {
-                io.emit("log", { folder: folder, msg: `Process exited with code ${code}.` });
-                serverStatus.delete(folder);
-                io.emit("poweroff", folder)
-            })
-            io.emit("poweron", folder)
+                serverStatus.get(folder).stdout.on("data", log)
+
+                serverStatus.get(folder).stderr.on("data", log)
+
+                serverStatus.get(folder).on("exit", code => {
+                    clearInterval(serverStatus.get(folder).updator)
+                    rams.delete(folder)
+                    notify = `Process exited with code ${code}.\n`
+                    serverStatus.get(folder).loggerStream.write(notify)
+                    io.emit("log", { folder: folder, msg: notify });
+                    reboot = serverStatus.get(folder).reboot
+                    serverStatus.get(folder).loggerStream.end()
+                    serverStatus.delete(folder);
+                    io.emit("poweroff", folder)
+                    if (reboot) toggle(folder)
+                })
+                io.emit("poweron", folder)
+                serverStatus.get(folder).updator = setInterval(() => { UsageUpdator(folder) }, 1000 * 5);
+            }
         } else {
             //power off
-            serverStatus.get(folder).stdin.write("stop");
+            serverStatus.get(folder).stdin.write("stop\n");
+        }
+    }
+    socket.on("reboot", folder => {
+        folder = filter_escape(folder)
+        if (serverStatus.get(folder) != undefined && serverStatus.get(folder).reboot != true) {
+            serverStatus.get(folder).reboot = true;
+            toggle(folder);
+            io.emit("alert", { folder: folder, type: 0, msg: "Server will reboot now." })
         }
     })
+    socket.on("toggle", toggle)
     socket.on("config", data => {
-        folder = data["folder"]
-        db[folder] = {
-            arg: data["arg"],
-            filename: data["filename"],
-            Xmx: data["Xmx"],
-            Xms: data["Xms"]
+        folder = filter_escape(data["folder"])
+        if (folder != undefined) {
+            data["java"] = filter_escape(data["java"])
+            data["arg"] = filter_escape(data["arg"])
+            data["filename"] = filter(data["filename"])
+            data["Xmx"] = filter(data["Xmx"])
+            data["Xms"] = filter(data["Xms"])
+
+            db[folder] = {
+                java: data["java"],
+                arg: data["arg"],
+                filename: data["filename"] == undefined ? "" : data["filename"],
+                Xmx: data["Xmx"] == undefined ? "" : data["Xmx"],
+                Xms: data["Xms"] == undefined ? "" : data["Xms"]
+            }
+            save()
+            socket.emit("alert", { folder: folder, type: 0, msg: "Config file saved!" })
+            io.emit("update_config", { folder: folder, config: db[folder] })
         }
-        save()
-        socket.emit("alert", { type: 0, msg: "Config file saved!" })
-        io.emit("update_config", { folder: folder, config: db[folder] })
     })
 });
 http.listen(process.env["port"])
@@ -159,15 +285,23 @@ function auth(req, res, next) {
     }
 }
 
-app.get("/", auth, function (req, res) {
-    const servers = fs.readdirSync("Servers").filter(loc => fs.statSync(path.join("Servers", loc)).isDirectory());
-    res.render("home", { username: req.session.username, msg: "", server_list: servers, server: "" });
+app.get("/", auth, async function (req, res) {
+    serverlist = servers()
+    res.render("home", {
+        username: req.session.username, msg: "",
+        javas: db["javas"], server_list: serverlist,
+        server: "", freeRAM: os.freemem() / (1024 * 1024),
+        maxRAM: maxRAM_MB, sevRAM: rams
+    });
 });
 
 app.get("/server/:folder", auth, function (req, res) {
-    const servers = fs.readdirSync("Servers").filter(loc => fs.statSync(path.join("Servers", loc)).isDirectory());
-
-    res.render("server", { username: req.session.username, msg: "", server_list: servers, server: req.params["folder"] });
+    res.render("server", {
+        username: req.session.username, msg: "",
+        javas: db["javas"], jarfiles: jarfiles(req.params["folder"]),
+        server_list: servers(), server: req.params["folder"],
+        maxRAM: maxRAM_MB
+    });
 });
 
 app.use((req, res) => {

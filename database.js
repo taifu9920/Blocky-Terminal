@@ -15,7 +15,7 @@ module.exports = {
         try {
             fs.accessSync(db_loc, fs.constants.R_OK)
         } catch (err) {
-            db = { secret: require('crypto').randomBytes(48).toString('hex') }
+            db = { secret: require('crypto').randomBytes(48).toString('hex'), javas: ["java"] }
             fs.writeFileSync(db_loc, JSON.stringify(db), encoding, err => {
                 if (err) throw err;
             })

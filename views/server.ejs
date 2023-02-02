@@ -1,20 +1,4 @@
 <% layout('layout') %>
-<div class="toast-container top-0 start-50 translate-middle-x position-fixed bottom-0 end-0 p-3">
-  <div id="toast_success" class="toast text-bg-success" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="d-flex">
-      <div class="toast-body">Message</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-  </div>
-</div>
-<div class="toast-container top-0 start-50 translate-middle-x position-fixed bottom-0 end-0 p-3">
-  <div id="toast_fail" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="d-flex">
-      <div class="toast-body">Message</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-  </div>
-</div>
 <div class="modal fade" id="modalConfig" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
@@ -37,27 +21,35 @@
       <div class="modal-body">
         <div class="tab-content" id="myTabContent">
           <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-            <div class="input-group mb-2">
-              <span class="input-group-text">java -jar </span>
+            <div class="input-group">
+              <datalist id="javaList">
+                <% for (i = 0; i < javas.length; i++) { %>
+                <option value="<%= javas[i] %>">
+                <% } %>
+              </datalist>
+              <input type="text" style="border-bottom-left-radius: 0;" class="form-control bg-white" list="javaList" value="java" placeholder="java location" id="java" />
+              <span class="input-group-text">-jar</span>
               <datalist id="jarList">
-                <option value="server.jar">
-                <option value="abc.jar">
-                <option value="test.jar">
+                <% for (i = 0; i < jarfiles.length; i++) { %>
+                <option value="<%= jarfiles[i] %>">
+                <% } %>
               </datalist>
               <input type="text" class="form-control bg-white" list="jarList" placeholder="jar filename" id="jarfilename" />
               <span class="input-group-text">-Xmx</span>
-              <input type="number" id="Xmx" min="0.5" max="16" value="0.5" class="form-control bg-white" style="border-color:#ced4da;z-index:1; max-width:80px;" placeholder="Max">
+              <input type="number" id="Xmx" onchange="changemax(this)" oninput="changemax(this)" min="0.5" step="0.5" max="<%= Math.round(maxRAM/1024) %>" value="0.5" class="form-control bg-white" style="border-color:#ced4da;z-index:1; max-width:80px;" placeholder="Max">
               <span class="input-group-text">G</span>
               <span class="input-group-text">-Xms</span>
-              <input type="number" id="Xms" min="0.5" max="16" value="0.5" class="form-control bg-white" style="border-color:#ced4da;z-index:1; max-width:80px;" placeholder="Min">
-              <span class="input-group-text">G</span>
-              <input type="text" class="form-control bg-white" style="border-color:#ced4da;z-index:1;" placeholder="Extra Argument" id="arg">
+              <input type="number" id="Xms" onchange="changemin(this)" oninput="changemin(this)" min="0.5" step="0.5" max="<%= Math.round(maxRAM/1024) %>" value="0.5" class="form-control bg-white" style="border-color:#ced4da;z-index:1; max-width:80px;" placeholder="Min">
+              <span class="input-group-text" style="border-bottom-right-radius: 0;">G</span>
+            </div>
+            <div class="input-group mb-2">
+              <input type="text" autocomplete="off" class="form-control bg-white" style="border-top-left-radius: 0;border-top-right-radius: 0;border-color:#ced4da;z-index:1;" placeholder="Extra Argument" id="arg">
             </div>
 
             <label for="maxRAM" class="form-label">Max Memory (-Xmx)</label>
-            <input type="range" onchange="$('#Xmx').val($(this).val())" oninput="$('#Xmx').val($(this).val())" class="form-range" min="0.5" max="16" step="0.5" id="maxRAM" value="0.5">
+            <input type="range" onchange="changemax(this)" oninput="changemax(this)" class="form-range" min="0.5" max="<%= Math.round(maxRAM/1024) %>" step="0.5" id="maxRAM" value="4">
             <label for="minRAM" class="form-label">Min Memory (-Xms)</label>
-            <input type="range" onchange="$('#Xms').val($(this).val())" oninput="$('#Xms').val($(this).val())" class="form-range mb-2" min="0.5" max="16" step="0.5" id="minRAM" value="0.5">
+            <input type="range" onchange="changemin(this)" oninput="changemin(this)" class="form-range mb-2" min="0.5" max="<%= Math.round(maxRAM/1024) %>" step="0.5" id="minRAM" value="4">
 
             <button type="button" class="btn btn-success" onclick="saveConfig()"><span class="material-symbols-outlined" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save">Save</span></button>
 
@@ -94,13 +86,13 @@
       </div>
     </div>
   </div>
-  <div class="card-body d-flex flex-column-reverse overflow-scroll" style="height:300px;" id="logs">
+  <div class="card-body d-flex flex-column-reverse overflow-scroll" style="height:300px;white-space: pre-line;overflow-wrap: anywhere;" id="logs">
   </div>
   <div class="card-footer p-0">
     <div class="input-group flex-nowrap" style="margin:-1px; width:unset;">
       <span class="input-group-text" id="addon-wrapping" style="border-top-left-radius:0;">#</span>
       <input autocomplete="off" id="cmd" type="text" style="box-shadow:none; border:0;z-index:0;" class="form-control bg-white" placeholder="Command Line" aria-label="Command Line" aria-describedby="addon-wrapping">
-      <button onclick="sendCmd()" class="btn btn-reboot text-white" style="border-top-right-radius:0; color:#666;" type="button"><span class="material-symbols-outlined">send</span></button>
+      <button onclick="sendCmd()" id="sendCmd" class="btn btn-reboot text-white" style="border-top-right-radius:0; color:#666;" type="button"><span class="material-symbols-outlined">send</span></button>
     </div>
   </div>
 </div>
@@ -110,35 +102,55 @@
   const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
   socket.on("log", data => {
     if (data["folder"] == "<%= server %>") {
-      $("#logs").prepend(`<span>${data["msg"]}</span>`)
+      $("#logs").text( $("#logs").text() + `${data["msg"]}`)
     }
   })
+
+  $("#cmd").on("keypress", function(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    $("#sendCmd").click();
+  }
+});
 
   socket.on("init", () => {
     socket.emit("fetch", "<%= server %>")
-  })
-
-  socket.on("alert", data => {
-    if (data["type"] == 0) {
-      $("#toast_success .toast-body").text(data["msg"])
-      new bootstrap.Toast($("#toast_success")).show();
-    } else if (data["type"] == 1) {
-      $("#toast_fail .toast-body").text(data["msg"])
-      new bootstrap.Toast($("#toast_fail")).show();
-    }
   })
 
   socket.on("update_config", data => {
     if (data["folder"] == "<%= server %>") {
       configs = data["config"]
       $("#arg").val(configs["arg"])
+      $("#java").val(configs["java"])
       $("#jarfilename").val(configs["filename"])
       $("#maxRAM").val(configs["Xmx"])
       $("#minRAM").val(configs["Xms"])
+      $("#minRAM").attr("max", configs["Xmx"])
+      $("#Xms").attr("max", configs["Xmx"])
       $("#Xmx").val(configs["Xmx"])
       $("#Xms").val(configs["Xms"])
     }
   })
+  function changemax(o){
+    $('#Xmx').val($(o).val())
+    $('#maxRAM').val($(o).val())
+    if ($("#Xms").val()*1 > $(o).val()*1 || $("#minRAM").val()*1 > $(o).val()*1){
+      $("#minRAM").val($(o).val())
+      $("#Xms").val($(o).val())
+    }
+    if ($(o).val() == "0.5"){
+      $("#minRAM").prop('disabled', true);
+    }else{
+      $("#minRAM").prop('disabled', false);
+    }
+    $("#minRAM").attr("max", $(o).val())
+    $("#Xms").attr("max", $(o).val())
+  }
+
+  function changemin(o){
+    $('#Xms').val($(o).val())
+    $('#minRAM').val($(o).val())
+  }
 
   function sendCmd() {
     if ($("#cmd").val() != "") {
@@ -152,6 +164,7 @@
 
   function saveConfig() {
     socket.emit("config", {
+      java: $("#java").val(),
       folder: "<%= server %>",
       arg: $("#arg").val(),
       filename: $("#jarfilename").val(),

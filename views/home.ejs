@@ -1,8 +1,214 @@
 <% layout('layout') %>
 
-<div class="card m-2">
-  <h5 class="card-header">Dashboard</h5>
-  <div class="card-body">
-    <p class="card-text">Dashboard WIP</p>
+<% SevRAM = sevRAM.size > 0 ? Math.round(Array.from(sevRAM.values()).reduce((a,b)=>{return a+b})/1024/1024*100)/100 : 0%>
+
+<div class="container-fluid mt-2">
+  <div class="row mb-2">
+    <div class="col-lg-8 col-12 mb-2">
+      <div class="card">
+        <h5 class="card-header">Dashboard</h5>
+        <div class="card-body">
+          <div class="row mb-2">
+            <div class="col text-center">Memory Usage</div>
+          </div>
+          <div class="row">
+            <div class="col-6 text-center">Total / Free<br><%= Math.round(maxRAM / 1024*100)/100 %> / <%= Math.round(freeRAM / 1024*100)/100 %> GB</div>
+            <div class="col-6 text-center">Server Used<br><%= Math.round(SevRAM / 1024*100)/100 %> GB</div>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <canvas id="SysMem"></canvas>
+            </div>
+            <div class="col-6">
+              <canvas id="SevMem"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 flex-grow-1 col-12 mb-2">
+      <div class="card" style="height:100%;">
+        <div class="card-header">Javas</div>
+        <ul class="list-group list-group-flush d-flex flex-grow-1 overflow-scroll" style="overflow-wrap: anywhere;">
+          <% for (i = 0; i < javas.length; i++) { %>
+          <li class="list-group-item java">
+            <div class="row align-items-center">
+              <div class="col viewJava"><%= javas[i] %></div>
+              <div class="col input-group editJava" style="display:none;"><input class="form-control bg-white" value="<%= javas[i] %>" /></div>
+              <div class="col-auto me-auto">
+                <button type="button" class="btn btn-danger deleteJava" onclick="deleteJava(this)"><span class="material-symbols-outlined">delete</span></button>
+                <button type="button" class="btn btn-success editJava" onclick="editJava(this)"><span class="material-symbols-outlined">edit</span></button>
+                <button type="button" class="btn btn-success saveJava" style="display:none" onclick="saveJava(this)"><span class="material-symbols-outlined">save</span></button>
+              </div>
+            </div>
+          </li>
+          <% } %>
+          <li class="list-group-item" id="javaAdder" style="margin-top:auto;">
+            <div class="row align-items-center">
+              <div class="col input-group"><input class="form-control bg-white" value="" /></div>
+              <div class="col-auto me-auto">
+                <button type="button" class="btn btn-success" onclick="addJava(this)" id="javaSaveBtn"><span class="material-symbols-outlined">add</span></button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-6">
+      <div class="card">
+        <div class="card-header">
+          WIP
+        </div>
+        <div class="card-body">
+          <p class="mb-0">WIP</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
+<script>
+  function deleteJava(o) {
+    parent = $(o).parent().parent()
+    viewArea = parent.children(".viewJava")
+    socket.emit("deleteJava", viewArea.text())
+  }
+
+  function editJava(o) {
+    $(o).parent().children(".editJava").hide();
+    $(o).parent().children(".deleteJava").hide();
+    $(o).parent().children(".saveJava").show();
+    parent = $(o).parent().parent()
+    editArea = parent.children(".editJava")
+    viewArea = parent.children(".viewJava")
+    editArea.show();
+    viewArea.hide();
+  }
+
+  function saveJava(o) {
+    $(o).parent().children(".editJava").show();
+    $(o).parent().children(".deleteJava").show();
+    $(o).parent().children(".saveJava").hide();
+    parent = $(o).parent().parent()
+    editArea = parent.children(".editJava")
+    viewArea = parent.children(".viewJava")
+    editArea.hide();
+    viewArea.show();
+  }
+
+  function addJava(o) {
+    datas = $(o).parent().parent().children("div").children("input");
+    if (datas.val().trim() != "") {
+      socket.emit("newJava", datas.val())
+    } else {
+      $("#toast_fail .toast-body").text("The input area is empty!")
+      new bootstrap.Toast($("#toast_fail")).show();
+    }
+    datas.val("");
+  }
+
+  socket.on("newJava", path => {
+    $("#javaAdder").before(`<li class="list-group-item java">
+<div class="row align-items-center">
+<div class="col viewJava">${path}</div>
+<div class="col input-group editJava" style="display:none;"><input class="form-control bg-white" value="${path}"/></div>
+<div class="col-auto me-auto">
+<button type="button" class="btn btn-danger deleteJava" onclick="deleteJava(this)"><span class="material-symbols-outlined">delete</span></button>
+<button type="button" class="btn btn-success editJava" onclick="editJava(this)"><span class="material-symbols-outlined">edit</span></button>
+<button type="button" class="btn btn-success saveJava" style="display:none" onclick="saveJava(this)"><span class="material-symbols-outlined">save</span></button>
+</div>
+</div>
+</li>`)
+  })
+
+  socket.on("deleteJava", path => {
+    list = $("#javaAdder").parent().children(".java");
+    for (i = 0; i < list.length; i++) {
+      if ($(list[i]).children().children(".viewJava").text() == path) $(list[i]).remove();
+    }
+  })
+
+  Chart.register(ChartDataLabels);
+
+  new Chart($("#SysMem"), {
+    type: 'pie',
+    data: {
+      labels: [
+        'Free',
+        'Used',
+        'Servers'
+      ],
+      datasets: [{
+        data: [<%= freeRAM %>, <%= maxRAM - freeRAM - SevRAM %>, <%= SevRAM %>],
+        backgroundColor: [
+          'rgb(32, 128, 45)',
+          'rgb(168, 67, 47)',
+          'rgb(54, 119, 168)'
+        ]
+      }]
+    },
+    options: {
+      plugins: {
+        datalabels: {
+          formatter: function(value, context) {
+            return `${context.chart.data.labels[context.dataIndex]}\n${Math.round(value*100)/100}MB`;
+          },
+          align: "center",
+          textAlign: "center",
+          color: "white"
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          enabled: false
+        },
+        title: {
+          display: true,
+          text: "Total RAM Usage"
+        }
+      }
+    }
+  });
+
+  new Chart($("#SevMem"), {
+    type: 'doughnut',
+    data: {
+      labels: ["<%- sevRAM.size > 0 ? Array.from(sevRAM.keys()).join(`", "`) : "Free" %>"],
+      datasets: [{
+        label: 'Server RAM Usage',
+        data: [<%= sevRAM.size > 0 ? Array.from(sevRAM.values()) : 1 %>],
+        backgroundColor: [
+          'rgb(10, 38, 71)',
+          'rgb(20, 66, 114)',
+          'rgb(32, 82, 149)',
+          'rgb(44, 116, 179)'
+        ]
+      }]
+    },
+    options: {
+      plugins: {
+        datalabels: {
+          formatter: function(value, context) {
+            return `${context.chart.data.labels[context.dataIndex]}\n${Math.round(value/1024/1024*100)/100}MB`;
+          },
+          align: "center",
+          textAlign: "center",
+          color: "white"
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          enabled: false
+        },
+        title: {
+          display: true,
+          text: "Total RAM Usage"
+        }
+      }
+    }
+  });
+</script>

@@ -2,6 +2,7 @@
 
 <script>
   var socket = io("/");
+  var server = "<%= server %>"
   socket.on('connect', () => {
     $("#msg").text("SocketIO connected to Blocky Terminal")
     $("#msg").css("background-color", "green")
@@ -11,34 +12,63 @@
     $("#msg").css("background-color", "red")
   });
   socket.on("poweron", folder => {
-    if (folder == "<%= server %>") {
+    if (folder == server) {
       $("#card").attr("class", "card m-2 overflow-hidden flex-grow-1")
       $("#shutbtn").show();
       $("#bootbtn").hide();
     }
     console.log(`#${folder}`)
-    $(`#${folder.replaceAll(" ", "_")}`).attr("class", "nav-link active d-flex justify-content-center server powerOn")
+    $(`#${folder.replaceAll(" ", "__").replaceAll(".", "___")}`).attr("class", "nav-link active d-flex justify-content-center server powerOn")
   })
   socket.on("poweroff", folder => {
-    if (folder == "<%= server %>") {
+    if (folder == server) {
       $("#card").attr("class", "card text-bg-secondary m-2 overflow-hidden flex-grow-1")
       $("#shutbtn").hide();
       $("#bootbtn").show();
     }
-    $(`#${folder.replaceAll(" ", "_")}`).attr("class", "nav-link active d-flex justify-content-center server")
+    $(`#${folder.replaceAll(" ", "__").replaceAll(".", "___")}`).attr("class", "nav-link active d-flex justify-content-center server")
+  })
+  socket.on("alert", data => {
+    if (data["folder"] == server){
+      if (data["type"] == 0) {
+      $("#toast_success .toast-body").text(data["msg"])
+      new bootstrap.Toast($("#toast_success")).show();
+    } else if (data["type"] == 1) {
+      $("#toast_fail .toast-body").text(data["msg"])
+      new bootstrap.Toast($("#toast_fail")).show();
+    }
+    }
   })
 
+  socket.emit("init")
 </script>
+
+<div class="toast-container top-0 start-50 translate-middle-x position-fixed bottom-0 end-0 p-3">
+  <div id="toast_success" class="toast text-bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">Message</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+<div class="toast-container top-0 start-50 translate-middle-x position-fixed bottom-0 end-0 p-3">
+  <div id="toast_fail" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">Message</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
 
 <div class="container-fluid" style="height:100%;max-height:100%;">
   <div class="row" style="height:inherit;max-height:inherit;">
     <div class="col-auto" style="max-height:inherit;" id="menu">
       <ul class="nav flex-column flex-nowrap" style="max-height:inherit;">
         <li class="nav-item">
-          <a class="nav-link d-flex justify-content-center" href="/">
+          <a class="nav-link active d-flex justify-content-center" href="/">
             <span class="material-symbols-outlined">home</span>
             <span class="nav-link active collapse collapse-horizontal menus p-0" style="line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">　</span>
-            <span class="nav-link active collapse collapse-horizontal menus p-0" style="white-space:nowrap;line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">Service Terminal</span>
+            <span class="nav-link active collapse collapse-horizontal menus p-0" style="white-space:nowrap;line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">Home</span>
           </a>
         </li>
         <li class="nav-item">
@@ -49,17 +79,10 @@
             </button>
           </nav>
         </li>
-        <li class="nav-item">
-          <a class="nav-link active d-flex justify-content-center" href="/">
-            <span class="material-symbols-outlined">speed</span>
-            <span class="nav-link active collapse collapse-horizontal menus p-0" style="line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">　</span>
-            <span class="nav-link active collapse collapse-horizontal menus p-0" style="white-space:nowrap;line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">Dashboard</span>
-          </a>
-        </li>
         <div style="overflow:scroll;">
           <% for(i = 0; i < server_list.length; i++) { %>
           <li class="nav-item">
-            <a class="nav-link active d-flex justify-content-center server" id="<%= server_list[i].replaceAll(" ", "_") %>" href="/server/<%= server_list[i] %>">
+            <a class="nav-link active d-flex justify-content-center server" id="<%= server_list[i].replaceAll(" ", "__").replaceAll(".", "___") %>" href="/server/<%= server_list[i] %>">
               <span class="material-symbols-outlined">terminal</span>
               <span class="nav-link active collapse collapse-horizontal menus p-0" style="line-height:24px; color: inherit; transition:width 0.5s ease-in-out;">　</span>
               <span class="nav-link active collapse collapse-horizontal menus p-0" style="white-space:nowrap;line-height:24px; color: inherit; transition:width 0.5s ease-in-out;"><%= server_list[i] %></span>
@@ -69,7 +92,7 @@
         </div>
       </ul>
     </div>
-    <div class="col p-0" style="max-height:inherit;height:inherit;" >
+    <div class="col p-0" style="max-height:inherit;height:inherit;">
       <div class="container-fluid d-flex flex-column" style="max-height:inherit;height:inherit;">
         <div class="row">
           <div class="col pt-2 pb-2 text-center text-white" style="line-height:24px; background-color: gray;" id="msg">Socketio need some times, this should fix in 3 mins</div>
@@ -78,7 +101,7 @@
           </a>
         </div>
 
-        <div class="row flex-grow-1">
+        <div class="row flex-grow-1 overflow-scroll">
           <div class="col p-0 d-flex flex-column">
             <%- body %>
           </div>
@@ -95,5 +118,4 @@
     })
     $("#menutoggle").click()
   }
-  socket.emit("init")
 </script>

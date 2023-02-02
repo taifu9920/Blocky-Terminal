@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/taifu9920/JS-ServiceTerminal#readme",
   "dependencies": {
+    "@popperjs/core": "^2.11.6",
     "bootstrap": "^5.2.3",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
@@ -24,13 +25,17 @@
     "dotenv": "^16.0.3",
     "ejs": "^3.1.8",
     "ejs-locals": "^1.0.2",
+    "event-stream": "^4.0.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "express-winston": "^4.2.0",
     "iconv-lite": "^0.6.3",
     "jquery": "^3.6.3",
     "jquery.cookie": "^1.4.1",
+    "pidusage-tree": "^2.0.5",
+    "read-last-lines": "^1.8.0",
     "socket.io": "^4.5.4",
+    "tree-kill": "^1.2.2",
     "winston": "^3.8.2",
     "winston-daily-rotate-file": "^4.7.1"
   }
