@@ -4,7 +4,8 @@
   "description": "",
   "main": "run.js",
   "scripts": {
-    "dev": "npx sass ./sass/style.scss ./static/css/style.css"
+    "dev": "npx sass ./sass/style.scss ./static/css/style.css",
+    "postinstall": "cp -r ./fixs/* ./node_modules/"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,7 @@
     "iconv-lite": "^0.6.3",
     "jquery": "^3.6.3",
     "jquery.cookie": "^1.4.1",
+    "php-express": "0.0.3",
     "pidusage-tree": "^2.0.5",
     "read-last-lines": "^1.8.0",
     "socket.io": "^4.5.4",

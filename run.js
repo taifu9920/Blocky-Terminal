@@ -12,6 +12,8 @@ const readLastLines = require('read-last-lines');
 
 maxRAM_MB = os.totalmem() / (1024 * 1024);
 
+serverdir = `${process.env["filesysDir"]}${process.env["ServerDir"]}`
+
 const express = require("express")
     , winston = require('winston')
     , { combine, timestamp, printf, colorize, align } = winston.format
@@ -40,7 +42,9 @@ let logger = winston.createLogger({
 });
 
 function getLoggerLoc(folder) {
-    return `serverLogs/${folder}.log`
+    logLoc = `${process.env["filesysDir"]}/.serverLogs`
+    if (!fs.existsSync(logLoc)) fs.mkdirSync(logLoc);
+    return `${logLoc}/${folder}.log`
 }
 
 function filter(parameter) {
@@ -53,7 +57,8 @@ function filter_escape(parameter) {
 }
 
 function servers() {
-    return fs.readdirSync("Servers").filter(loc => fs.statSync(path.join("Servers", loc)).isDirectory())
+    if (!fs.existsSync(serverdir)) fs.mkdirSync(serverdir);
+    return fs.readdirSync(serverdir).filter(loc => fs.statSync(path.join(serverdir, loc)).isDirectory() && !loc.startsWith("."))
 }
 var rams = new Map();
 
@@ -65,7 +70,7 @@ async function UsageUpdator(folder) {
 }
 
 function jarfiles(folder) {
-    return fs.readdirSync(`Servers/${folder}`).filter(loc => fs.statSync(path.join(`Servers/${folder}`, loc)).isFile() && loc.endsWith(".jar"))
+    return fs.readdirSync(`${serverdir}/${folder}`).filter(loc => fs.statSync(path.join(`${serverdir}/${folder}`, loc)).isFile() && loc.endsWith(".jar"))
 }
 
 function checks() {
@@ -85,9 +90,25 @@ function checks() {
 }
 
 let app = express();
+
 app.use(compression())
 app.engine('ejs', require("ejs-locals"))
 app.set('view engine', 'ejs');
+
+let phpRoute = express();
+phpExpress = require('php-express')({
+    binPath: 'php'
+});
+phpRoute.use(compression())
+phpRoute.use(express.urlencoded({ extended: false }));
+phpRoute.set('views', './filesys');
+phpRoute.engine('php', phpExpress.engine);
+phpRoute.set('view engine', 'php');
+phpRoute.all(/.+\.php/, phpExpress.router);
+phpRoute.use("/", express.static("filesys"));
+phpRoute.get("/", function(req, res){
+    res.redirect('/filesys/index.php');
+});
 
 db = load();
 
@@ -177,10 +198,8 @@ io.on('connection', (socket) => {
                 cmd = [db[folder]["java"]].concat(execs).join(" ") + "\n"
 
                 io.emit("log", { folder: folder, msg: cmd })
-                serverStatus.set(folder, spawn(`"${db[folder]["java"]}"`, execs, { cwd: `./Servers/${folder}/`, shell: true }));
-                if (!fs.existsSync("serverLogs")) {
-                    fs.mkdirSync("serverLogs");
-                }
+                serverStatus.set(folder, spawn(`"${db[folder]["java"]}"`, execs, { cwd: `${serverdir}/${folder}/`, shell: true }));
+
                 serverStatus.get(folder).loggerStream = fs.createWriteStream(getLoggerLoc(folder), { flags: 'w' });
                 serverStatus.get(folder).loggerStream.write(cmd)
 
@@ -303,6 +322,8 @@ app.get("/server/:folder", auth, function (req, res) {
         maxRAM: maxRAM_MB
     });
 });
+
+app.use("/filesys", auth, phpRoute);
 
 app.use((req, res) => {
     res.status(404).send("Request 404");
