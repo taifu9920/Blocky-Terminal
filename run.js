@@ -9,10 +9,21 @@ const kill = require('tree-kill');
 const pidusageTree = require('pidusage-tree')
 const es = require('event-stream');
 const readLastLines = require('read-last-lines');
-
+const multer = require('multer')
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'filesys/php/.tmp/')
+    }
+})
+var upload = multer({ storage: storage })
 maxRAM_MB = os.totalmem() / (1024 * 1024);
 
-serverdir = `${process.env["filesysDir"]}${process.env["ServerDir"]}`
+filesysDir = process.env["filesysDir"]
+serverdir = `${filesysDir}${process.env["ServerDir"]}`
+logLoc = `${filesysDir}${process.env["LogDir"]}`
+trashDir = `${filesysDir}/.trash`
+if (!fs.existsSync(filesysDir)) fs.mkdirSync(filesysDir);
+if (!fs.existsSync(trashDir)) fs.mkdirSync(trashDir);
 
 const express = require("express")
     , winston = require('winston')
@@ -42,7 +53,7 @@ let logger = winston.createLogger({
 });
 
 function getLoggerLoc(folder) {
-    logLoc = `${process.env["filesysDir"]}/.serverLogs`
+    if (!fs.existsSync(filesysDir)) fs.mkdirSync(filesysDir);
     if (!fs.existsSync(logLoc)) fs.mkdirSync(logLoc);
     return `${logLoc}/${folder}.log`
 }
@@ -57,6 +68,7 @@ function filter_escape(parameter) {
 }
 
 function servers() {
+    if (!fs.existsSync(filesysDir)) fs.mkdirSync(filesysDir);
     if (!fs.existsSync(serverdir)) fs.mkdirSync(serverdir);
     return fs.readdirSync(serverdir).filter(loc => fs.statSync(path.join(serverdir, loc)).isDirectory() && !loc.startsWith("."))
 }
@@ -100,13 +112,11 @@ phpExpress = require('php-express')({
     binPath: 'php'
 });
 phpRoute.use(compression())
-phpRoute.use(express.urlencoded({ extended: false }));
 phpRoute.set('views', './filesys');
 phpRoute.engine('php', phpExpress.engine);
 phpRoute.set('view engine', 'php');
-phpRoute.all(/.+\.php/, phpExpress.router);
-phpRoute.use("/", express.static("filesys"));
-phpRoute.get("/", function(req, res){
+phpRoute.all(/.+\.php/, express.urlencoded({ extended: false }), upload.any(), phpExpress.router);
+phpRoute.get("/", function (req, res) {
     res.redirect('/filesys/index.php');
 });
 
@@ -178,6 +188,15 @@ io.on('connection', (socket) => {
         save();
         socket.emit("alert", { folder: folder, type: 0, msg: "Deleted a java path" })
         io.emit("deleteJava", path)
+    })
+    socket.on("updateJava", obj => {
+        old = filter_escape(obj["old"])
+        news = filter_escape(obj["new"])
+        db["javas"] = db["javas"].filter(x => filter_escape(x) != old).concat(news)
+        save();
+        socket.emit("alert", { folder: folder, type: 0, msg: "Updated a java path" })
+        io.emit("deleteJava", old)
+        io.emit("newJava", news)
     })
     socket.on("scram", folder => {
         folder = filter_escape(folder)
@@ -324,6 +343,7 @@ app.get("/server/:folder", auth, function (req, res) {
 });
 
 app.use("/filesys", auth, phpRoute);
+app.use("/filesys", express.static("filesys"));
 
 app.use((req, res) => {
     res.status(404).send("Request 404");

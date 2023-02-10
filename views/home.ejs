@@ -56,11 +56,11 @@
       </div>
     </div>
 
-    <div class="col-12 mt-2">
+    <div class="col-12">
       <div class="card">
         <div class="card-header">File System</div>
         <div class="card-body">
-          <iframe src="/filesys" style="width:100%; height: 420px;">Your browser doesn't support iframe!</iframe>
+          <div id="elfinder"></div>
         </div>
       </div>
     </div>
@@ -94,6 +94,11 @@
     viewArea = parent.children(".viewJava")
     editArea.hide();
     viewArea.show();
+    data = {
+      old: viewArea.text(),
+      new: editArea.children("input").val()
+    }
+    if (data.old != data.new) socket.emit("updateJava", data)
   }
 
   function addJava(o) {

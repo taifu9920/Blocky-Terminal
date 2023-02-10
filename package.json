@@ -5,7 +5,7 @@
   "main": "run.js",
   "scripts": {
     "dev": "npx sass ./sass/style.scss ./static/css/style.css",
-    "postinstall": "cp -r ./fixs/* ./node_modules/"
+    "postinstall": "node scripts/postinstall.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
     "bootstrap": "^5.2.3",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
+    "cross-var": "^1.1.0",
     "csurf": "^1.11.0",
     "dotenv": "^16.0.3",
     "ejs": "^3.1.8",
@@ -30,9 +31,11 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "express-winston": "^4.2.0",
+    "glob": "^8.1.0",
     "iconv-lite": "^0.6.3",
     "jquery": "^3.6.3",
     "jquery.cookie": "^1.4.1",
+    "multer": "^1.4.5-lts.1",
     "php-express": "0.0.3",
     "pidusage-tree": "^2.0.5",
     "read-last-lines": "^1.8.0",

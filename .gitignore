@@ -9,7 +9,7 @@ lerna-debug.log*
 Servers/*
 db.json
 db.json.old
-serverLogs
+filesys/logs
 filesys/files/*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
