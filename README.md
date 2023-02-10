@@ -2,11 +2,9 @@
 #### A Minecraft server web management tool on NodeJS, 
 #### You can do any operations on the web interface,
 ### Including :
-* boot
-* stop
-* ~~reboot~~ (WIP)
-* ~~scram~~ (WIP)
-* ~~auto reboot~~ (WIP)
-* ~~config edit~~ (WIP)
-* ~~storage system modify~~ (WIP)
-## main functions still WIP for now!
+* Power on/off
+* Quick Reboot & Auto Reboot
+* Force stop (Scram)
+* File System on Web (Upload/Delete/Edit)
+* ~~Account Management~~ [WIP]
+* ~~Quick Download~~ [WIP]
