@@ -283,7 +283,6 @@ io.on('connection', (socket) => {
         }
     })
 });
-http.listen(process.env["port"])
 
 // Before Login
 
@@ -349,6 +348,6 @@ app.use((req, res) => {
     res.status(404).send("Request 404");
 })
 
-app.listen(process.env["port"], process.env["ip"], () => {
+http.listen(process.env["port"], process.env["ip"], () => {
     logger.info(`Server is listening on port number: ${process.env["port"]}`);
-});
+})
