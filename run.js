@@ -10,9 +10,11 @@ const pidusageTree = require('pidusage-tree')
 const es = require('event-stream');
 const readLastLines = require('read-last-lines');
 const multer = require('multer')
+tmpDir = `filesys/php${process.env["TmpDir"]}`
+if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir);
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'filesys/php/.tmp/')
+        cb(null, tmpDir)
     }
 })
 var upload = multer({ storage: storage })
